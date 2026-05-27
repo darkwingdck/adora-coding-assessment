@@ -8,6 +8,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -19,7 +20,9 @@ import (
 )
 
 func main() {
-	database, err := config.ConnectToSqlite("data/app.db")
+	ctx := context.Background()
+
+	database, err := config.ConnectToPostgres(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
