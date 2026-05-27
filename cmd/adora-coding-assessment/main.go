@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/darkwingdck/adora-coding-assessment/internal/api"
 	"github.com/darkwingdck/adora-coding-assessment/internal/db"
 )
 
@@ -16,11 +17,10 @@ func main() {
 
 	log.Println("database initialized")
 
+	api := api.NewService()
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
-	})
+	mux.HandleFunc("/test", api.Test())
 
 	log.Println("server listening on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
