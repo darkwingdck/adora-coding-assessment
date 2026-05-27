@@ -1,5 +1,4 @@
-// Package db - package to work with SQlite
-package db
+package config
 
 import (
 	"database/sql"
@@ -9,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func Init(path string) (*sql.DB, error) {
+func ConnectToSqlite(path string) (*sql.DB, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}

@@ -11,14 +11,15 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/darkwingdck/adora-coding-assessment/config"
 	_ "github.com/darkwingdck/adora-coding-assessment/docs"
 	"github.com/darkwingdck/adora-coding-assessment/internal/api"
-	"github.com/darkwingdck/adora-coding-assessment/internal/db"
+	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
-	database, err := db.Init("data/app.db")
+	database, err := config.ConnectToSqlite("data/app.db")
 	if err != nil {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
@@ -26,7 +27,9 @@ func main() {
 
 	log.Println("database initialized")
 
-	api := api.NewService()
+	storage := store.NewStore(database)
+
+	api := api.NewService(storage)
 
 	mux := http.NewServeMux()
 

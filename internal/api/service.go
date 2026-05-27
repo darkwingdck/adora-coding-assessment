@@ -1,6 +1,10 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/darkwingdck/adora-coding-assessment/store"
+)
 
 type Service interface {
 	// StoreWebhook webhook for in-app store
@@ -13,8 +17,12 @@ type Service interface {
 	MockCarrier() http.HandlerFunc
 }
 
-type service struct{}
+type service struct {
+	store store.Store
+}
 
-func NewService() Service {
-	return &service{}
+func NewService(store store.Store) Service {
+	return &service{
+		store: store,
+	}
 }
