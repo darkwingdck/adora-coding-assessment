@@ -10,7 +10,7 @@ import (
 
 func ConnectToPostgres(ctx context.Context) (*pgxpool.Pool, error) {
 	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
