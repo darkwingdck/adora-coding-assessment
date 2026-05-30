@@ -17,13 +17,19 @@ func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitleme
 	if cmd.UserID == "" {
 		return nil, fmt.Errorf("empty userID")
 	}
-	var entitlement Entitlement
 
-	err := s.pool.QueryRow(ctx, `
+	query := `
 		SELECT id, user_id, active, source, reason, expires_at, last_changed_at, last_event_time_ms
 		FROM entitlements
 		WHERE user_id = $1
-	`, cmd.UserID).Scan(
+	`
+	if cmd.WithLock {
+		query += " FOR UPDATE"
+	}
+
+	var entitlement Entitlement
+
+	err := s.pool.QueryRow(ctx, query, cmd.UserID).Scan(
 		&entitlement.ID,
 		&entitlement.UserID,
 		&entitlement.Active,

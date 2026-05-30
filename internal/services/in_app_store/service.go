@@ -38,7 +38,8 @@ var updateExpiresAtTypes = []dto.EventType{
 func (s *service) UpdateUserEntitlement(ctx context.Context, cmd dto.UpdateUserEntitlementCmd) error {
 	return s.store.WithTransaction(ctx, func(tx store.Store) error {
 		entitlement, err := tx.GetEntitlementByUserID(ctx, dto.GetEntitlementByUserIDCmd{
-			UserID: cmd.UserID,
+			UserID:   cmd.UserID,
+			WithLock: true, // prevents races with 2 webhook handlers
 		})
 		if err != nil {
 			return fmt.Errorf("tx.GetEntitlementByUserID: %w", err)

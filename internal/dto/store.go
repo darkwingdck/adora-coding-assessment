@@ -19,7 +19,8 @@ type UpsertEntitlementCmd struct {
 }
 
 type GetEntitlementByUserIDCmd struct {
-	UserID string
+	UserID   string
+	WithLock bool
 }
 
 type UpdateEntitlementCmd struct {

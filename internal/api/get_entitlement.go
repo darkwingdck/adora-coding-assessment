@@ -1,6 +1,11 @@
 package api
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
+)
 
 type EntitlementResponse struct {
 	Active        bool   `json:"active"`
@@ -23,8 +28,19 @@ type EntitlementResponse struct {
 func (s *service) GetEntitlement() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
-		_ = id
+		ctx := r.Context()
+		entitlement, err := s.store.GetEntitlementByUserID(ctx, dto.GetEntitlementByUserIDCmd{
+			UserID: id,
+		})
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("test"))
+
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		enc.Encode(entitlement)
 	}
 }
