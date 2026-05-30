@@ -47,7 +47,7 @@ func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitleme
 
 func (s *store) UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error {
 	_, err := s.pool.Exec(ctx, `
-		UPDATE entitlements
+		UPDATE entitlements SET
 		active = $1,
 		source = $2::entitlement_source,
 		reason = $3::entitlement_reason,

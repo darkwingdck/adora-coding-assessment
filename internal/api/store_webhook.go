@@ -1,6 +1,11 @@
 package api
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
+)
 
 type StoreWebhookRequest struct {
 	EventID     string `json:"eventId"`
@@ -23,6 +28,24 @@ type StoreWebhookRequest struct {
 //	@Router		/webhooks/store [post]
 func (s *service) StoreWebhook() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var req StoreWebhookRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+		ctx := r.Context()
+		err := s.inAppStore.UpdateUserEntitlement(ctx, dto.UpdateUserEntitlementCmd{
+			EventID:     req.EventID,
+			UserID:      req.UserID,
+			Type:        dto.EventType(req.Type),
+			EventTimeMs: req.EventTimeMs,
+			ProductID:   dto.ProductID(req.ProductID),
+		})
+
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }

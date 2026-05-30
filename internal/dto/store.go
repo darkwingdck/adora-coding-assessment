@@ -40,8 +40,8 @@ type RevokeMarketplaceEntitlementsCmd struct {
 type CreateStoreEventCmd struct {
 	UserID      string
 	EventID     string
-	Type        string
-	ProductID   string
+	Type        EventType
+	ProductID   ProductID
 	EventTimeMs int64
 }
 

@@ -15,6 +15,7 @@ import (
 	"github.com/darkwingdck/adora-coding-assessment/config"
 	_ "github.com/darkwingdck/adora-coding-assessment/docs"
 	"github.com/darkwingdck/adora-coding-assessment/internal/api"
+	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
 	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -32,9 +33,10 @@ func main() {
 	log.Println("database initialized")
 
 	storage := store.NewStore(pool)
-	mobileCarrierSvc := mobilecarrier.NewService()
+	mobileCarrierService := mobilecarrier.NewService()
+	inAppStoreService := inappstore.NewService(storage)
 
-	api := api.NewService(storage, mobileCarrierSvc)
+	api := api.NewService(storage, mobileCarrierService, inAppStoreService)
 
 	mux := http.NewServeMux()
 

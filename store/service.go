@@ -4,19 +4,27 @@ import (
 	"context"
 
 	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type querier interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
 type Store interface {
+	WithTransaction(ctx context.Context, fn func(Store) error) error
+
 	// Users
 	UpsertUser(ctx context.Context, cmd dto.UpsertUserCmd) error
 
 	// Entitlements
 	UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error
 	GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error)
-
 	UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error
-
 	RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error
 
 	// StoreEvents
@@ -29,11 +37,27 @@ type Store interface {
 }
 
 type store struct {
-	pool *pgxpool.Pool
+	rawPool *pgxpool.Pool
+	pool    querier
 }
 
-func NewStore(pool *pgxpool.Pool) Store {
+func NewStore(db *pgxpool.Pool) Store {
 	return &store{
-		pool: pool,
+		rawPool: db,
+		pool:    db,
 	}
+}
+
+func (s *store) WithTransaction(ctx context.Context, fn func(Store) error) error {
+	tx, err := s.rawPool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	if err := fn(&store{rawPool: s.rawPool, pool: tx}); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

@@ -3,6 +3,7 @@ package store
 import (
 	"time"
 
+	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
 	"github.com/google/uuid"
 )
 
@@ -13,17 +14,6 @@ const (
 	EntitlementSourceCarrier     EntitlementSource = "CARRIER"
 	EntitlementSourceMarketplace EntitlementSource = "MARKETPLACE"
 	EntitlementSourceNone        EntitlementSource = "NONE"
-)
-
-type EventType string
-
-const (
-	EventTypeInitialPurchase EventType = "INITIAL_PURCHASE"
-	EventTypeRenewal         EventType = "RENEWAL"
-	EventTypeCancellation    EventType = "CANCELLATION"
-	EventTypeBillingIssue    EventType = "BILLING_ISSUE"
-	EventTypeExpiration      EventType = "EXPIRATION"
-	EventTypeUnCancellation  EventType = "UN_CANCELLATION"
 )
 
 type EntitlementReason string
@@ -56,13 +46,13 @@ type Entitlement struct {
 }
 
 type StoreEvent struct {
-	ID          uuid.UUID `db:"id"`
-	UserID      string    `db:"user_id"`
-	EventID     string    `db:"event_id"`
-	Type        EventType `db:"type"`
-	ProductID   string    `db:"product_id"`
-	EventTimeMs int64     `db:"event_time_ms"`
-	ProcessedAt time.Time `db:"processed_at"`
+	ID          uuid.UUID     `db:"id"`
+	UserID      string        `db:"user_id"`
+	EventID     string        `db:"event_id"`
+	Type        dto.EventType `db:"type"`
+	ProductID   string        `db:"product_id"`
+	EventTimeMs int64         `db:"event_time_ms"`
+	ProcessedAt time.Time     `db:"processed_at"`
 }
 
 type Notification struct {
