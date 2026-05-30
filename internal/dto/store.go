@@ -18,11 +18,8 @@ type UpsertEntitlementCmd struct {
 	UserID string
 }
 
-type ListEntitlementsCmd struct {
-	Filter struct {
-		UserID *string
-		Source *string
-	}
+type GetEntitlementByUserIDCmd struct {
+	UserID string
 }
 
 type UpdateEntitlementCmd struct {

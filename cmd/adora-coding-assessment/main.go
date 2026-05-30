@@ -23,15 +23,15 @@ import (
 func main() {
 	ctx := context.Background()
 
-	database, err := config.ConnectToPostgres(ctx)
+	pool, err := config.ConnectToPostgres(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
-	defer database.Close()
+	defer pool.Close()
 
 	log.Println("database initialized")
 
-	storage := store.NewStore(database)
+	storage := store.NewStore(pool)
 	mobileCarrierSvc := mobilecarrier.NewService()
 
 	api := api.NewService(storage, mobileCarrierSvc)

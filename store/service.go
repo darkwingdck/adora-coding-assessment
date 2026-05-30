@@ -13,7 +13,7 @@ type Store interface {
 
 	// Entitlements
 	UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error
-	ListEntitlements(ctx context.Context, cmd dto.ListEntitlementsCmd) ([]*Entitlement, error)
+	GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error)
 
 	UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error
 
@@ -29,11 +29,11 @@ type Store interface {
 }
 
 type store struct {
-	db *pgxpool.Pool
+	pool *pgxpool.Pool
 }
 
-func NewStore(db *pgxpool.Pool) Store {
+func NewStore(pool *pgxpool.Pool) Store {
 	return &store{
-		db: db,
+		pool: pool,
 	}
 }
