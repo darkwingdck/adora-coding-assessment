@@ -19,9 +19,19 @@ func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitleme
 	}
 
 	query := `
-		SELECT id, user_id, active, source, reason, expires_at, last_changed_at, last_event_time_ms
-		FROM entitlements
-		WHERE user_id = $1
+		SELECT
+			id,
+			user_id,
+			active,
+			source,
+			reason,
+			expires_at,
+			last_changed_at,
+			last_event_time_ms
+		FROM
+			entitlements
+		WHERE
+			user_id = $1
 	`
 	if cmd.WithLock {
 		query += " FOR UPDATE"
@@ -53,14 +63,17 @@ func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitleme
 
 func (s *store) UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error {
 	_, err := s.pool.Exec(ctx, `
-		UPDATE entitlements SET
-		active = $1,
-		source = $2::entitlement_source,
-		reason = $3::entitlement_reason,
-		expires_at = $4,
-		last_changed_at = NOW(),
-		last_event_time_ms = $5
-		WHERE user_id = $6
+		UPDATE
+			entitlements
+		SET
+			active = $1,
+			source = $2::entitlement_source,
+			reason = $3::entitlement_reason,
+			expires_at = $4,
+			last_changed_at = NOW(),
+			last_event_time_ms = $5
+		WHERE
+			user_id = $6
 	`, cmd.Active, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs, cmd.UserID)
 
 	if err != nil {
@@ -70,5 +83,21 @@ func (s *store) UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlement
 }
 
 func (s *store) RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE
+			entitlements
+		SET
+			active = false,
+			source = 'NONE',
+			reason = 'MARKETPLACE_REVOKE',
+			last_changed_at = NOW()
+		WHERE
+			user_id = ANY($1)
+		AND
+			source = 'MARKETPLACE'
+	`, cmd.UserIDs)
+	if err != nil {
+		return fmt.Errorf("s.pool.Exec: %w", err)
+	}
 	return nil
 }
