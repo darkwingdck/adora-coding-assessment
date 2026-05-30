@@ -7,11 +7,3 @@ type GetMobileCarrierUserStatusCmd struct {
 type GetMobileCarrierUserStatusResult struct {
 	Status MobileCarrierUserStatus
 }
-
-type MobileCarrierUserStatus string
-
-const (
-	MobileCarrierUserStatusActive   MobileCarrierUserStatus = "active"
-	MobileCarrierUserStatusInactive MobileCarrierUserStatus = "inactive"
-	MobileCarrierUserStatusApiError MobileCarrierUserStatus = "api_error"
-)

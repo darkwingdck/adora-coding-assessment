@@ -26,8 +26,8 @@ type GetEntitlementByUserIDCmd struct {
 type UpdateEntitlementCmd struct {
 	UserID          string
 	Active          bool
-	Source          string
-	Reason          *string
+	Source          EntitlementSource
+	Reason          *EntitlementReason
 	ExpiresAt       *time.Time
 	LastEventTimeMs int64
 }

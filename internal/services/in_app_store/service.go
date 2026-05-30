@@ -72,11 +72,12 @@ func (s *service) UpdateUserEntitlement(ctx context.Context, cmd dto.UpdateUserE
 		}
 
 		err = tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
-			UserID:    cmd.UserID,
-			Active:    slices.Contains(activeTypes, cmd.Type),
-			Source:    string(store.EntitlementSourceStore), // TODO check types
-			Reason:    nil,                                  // TODO reason
-			ExpiresAt: expiresAt,
+			UserID:          cmd.UserID,
+			Active:          slices.Contains(activeTypes, cmd.Type),
+			Source:          dto.EntitlementSourceStore,
+			Reason:          s.getReasonFromEventType(cmd.Type),
+			ExpiresAt:       expiresAt,
+			LastEventTimeMs: time.Now().Unix(),
 		})
 		if err != nil {
 			return fmt.Errorf("tx.UpdateEntitlement: %w", err)
@@ -96,4 +97,25 @@ func (s *service) getExpiresAtFromProductID(productID dto.ProductID) (*time.Time
 		return nil, fmt.Errorf("unknown product_id: %v", productID)
 	}
 	return &expiresAt, nil
+}
+
+func (s *service) getReasonFromEventType(eventType dto.EventType) *dto.EntitlementReason {
+	var reason dto.EntitlementReason
+	switch eventType {
+	case dto.EventTypeInitialPurchase:
+		reason = dto.EntitlementReasonInitialPurchase
+	case dto.EventTypeRenewal:
+		reason = dto.EntitlementReasonRenewal
+	case dto.EventTypeCancellation:
+		reason = dto.EntitlementReasonCancellation
+	case dto.EventTypeBillingIssue:
+		reason = dto.EntitlementReasonBillingIssue
+	case dto.EventTypeExpiration:
+		reason = dto.EntitlementReasonExpiration
+	case dto.EventTypeUnCancellation:
+		reason = dto.EntitlementReasonCancellation
+	default:
+		return nil
+	}
+	return &reason
 }
