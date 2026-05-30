@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 )
 
@@ -13,16 +14,16 @@ type Service interface {
 	MarketplaceRevoke() http.HandlerFunc
 	// GetEntitlement get entitlement by userID
 	GetEntitlement() http.HandlerFunc
-	// MockCarrier mocks mobile carrier method to get person subscription status
-	MockCarrier() http.HandlerFunc
 }
 
 type service struct {
-	store store.Store
+	store         store.Store
+	mobileCarrier mobilecarrier.Service
 }
 
-func NewService(store store.Store) Service {
+func NewService(store store.Store, mobileCarrier mobilecarrier.Service) Service {
 	return &service{
-		store: store,
+		store:         store,
+		mobileCarrier: mobileCarrier,
 	}
 }

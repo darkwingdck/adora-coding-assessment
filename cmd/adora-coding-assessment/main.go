@@ -15,6 +15,7 @@ import (
 	"github.com/darkwingdck/adora-coding-assessment/config"
 	_ "github.com/darkwingdck/adora-coding-assessment/docs"
 	"github.com/darkwingdck/adora-coding-assessment/internal/api"
+	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -31,8 +32,9 @@ func main() {
 	log.Println("database initialized")
 
 	storage := store.NewStore(database)
+	mobileCarrierSvc := mobilecarrier.NewService()
 
-	api := api.NewService(storage)
+	api := api.NewService(storage, mobileCarrierSvc)
 
 	mux := http.NewServeMux()
 
@@ -40,7 +42,6 @@ func main() {
 	mux.HandleFunc("POST /webhooks/store", api.StoreWebhook())
 	mux.HandleFunc("POST /webhooks/marketplace/revoke", api.MarketplaceRevoke())
 	mux.HandleFunc("GET /users/{id}/entitlement", api.GetEntitlement())
-	mux.HandleFunc("GET /mock/carrier/plan", api.MockCarrier())
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
