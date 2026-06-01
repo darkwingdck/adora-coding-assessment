@@ -29,6 +29,51 @@ func (s *store) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlement
 	return nil
 }
 
+func (s *store) GetCarrierEntitlements(ctx context.Context) ([]*Entitlement, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			id,
+			user_id,
+			active,
+			source,
+			reason,
+			expires_at,
+			last_changed_at,
+			last_event_time_ms
+		FROM
+			entitlements
+		WHERE
+			source = 'CARRIER'
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("s.pool.Query: %w", err)
+	}
+	defer rows.Close()
+
+	var entitlements []*Entitlement
+	for rows.Next() {
+		var e Entitlement
+		if err := rows.Scan(
+			&e.ID,
+			&e.UserID,
+			&e.Active,
+			&e.Source,
+			&e.Reason,
+			&e.ExpiresAt,
+			&e.LastChangedAt,
+			&e.LastEventTimeMs,
+		); err != nil {
+			return nil, fmt.Errorf("rows.Scan: %w", err)
+		}
+		entitlements = append(entitlements, &e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err: %w", err)
+	}
+
+	return entitlements, nil
+}
+
 func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error) {
 	if cmd.UserID == "" {
 		return nil, fmt.Errorf("empty userID")

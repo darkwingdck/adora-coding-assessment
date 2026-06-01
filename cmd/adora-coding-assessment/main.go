@@ -15,6 +15,7 @@ import (
 	"github.com/darkwingdck/adora-coding-assessment/config"
 	_ "github.com/darkwingdck/adora-coding-assessment/docs"
 	"github.com/darkwingdck/adora-coding-assessment/internal/api"
+	carrierpolling "github.com/darkwingdck/adora-coding-assessment/internal/services/carrier_polling"
 	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
 	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	"github.com/darkwingdck/adora-coding-assessment/internal/services/users"
@@ -37,6 +38,9 @@ func main() {
 	mobileCarrierService := mobilecarrier.NewService()
 	inAppStoreService := inappstore.NewService(storage)
 	usersService := users.NewService(storage)
+
+	carrierWorker := carrierpolling.NewWorker(storage, mobileCarrierService)
+	go carrierWorker.Run(ctx)
 
 	api := api.NewService(storage, mobileCarrierService, inAppStoreService, usersService)
 

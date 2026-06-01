@@ -44,6 +44,7 @@ const (
 	EntitlementReasonBillingIssue      EntitlementReason = "BILLING_ISSUE"
 	EntitlementReasonExpiration        EntitlementReason = "EXPIRATION"
 	EntitlementReasonUnCancellation    EntitlementReason = "UN_CANCELLATION"
+	EntitlementReasonCarrierActive     EntitlementReason = "CARRIER_ACTIVE"
 	EntitlementReasonCarrierInactive   EntitlementReason = "CARRIER_INACTIVE"
 	EntitlementReasonMarketplaceRevoke EntitlementReason = "MARKETPLACE_REVOKE"
 )
