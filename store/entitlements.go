@@ -10,6 +10,22 @@ import (
 )
 
 func (s *store) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO
+			entitlements (user_id, active, source, reason, expires_at, last_event_time_ms)
+		VALUES
+			($1, true, $2::entitlement_source, $3::entitlement_reason, $4, $5)
+		ON CONFLICT (user_id) DO UPDATE SET
+			active = true,
+			source = EXCLUDED.source,
+			reason = EXCLUDED.reason,
+			expires_at = EXCLUDED.expires_at,
+			last_event_time_ms = EXCLUDED.last_event_time_ms,
+			last_changed_at = NOW()
+	`, cmd.UserID, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs)
+	if err != nil {
+		return fmt.Errorf("s.pool.Exec: %w", err)
+	}
 	return nil
 }
 

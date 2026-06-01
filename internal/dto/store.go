@@ -15,7 +15,11 @@ type UpsertUserCmd struct {
 // ==[ Entitlements ]==
 
 type UpsertEntitlementCmd struct {
-	UserID string
+	UserID          string
+	Source          EntitlementSource
+	Reason          *EntitlementReason
+	ExpiresAt       *time.Time
+	LastEventTimeMs int64
 }
 
 type GetEntitlementByUserIDCmd struct {
