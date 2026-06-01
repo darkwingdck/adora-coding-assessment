@@ -7,3 +7,4 @@
 - Add gomock for tests (?)
 - Create users by subscription service is a bad idea
 - What does exparation from store mean?
+- Use of AI - debug routes, tests, mocks, swagger
