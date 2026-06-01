@@ -28,6 +28,27 @@ func (s *service) handleEvent(ctx context.Context, tx store.Store, cmd dto.Updat
 	}
 }
 
+func (s *service) scheduleExpirationNotification(ctx context.Context, tx store.Store, userID string, expiresAt *time.Time) error {
+	if expiresAt == nil {
+		return nil
+	}
+
+	entitlement, err := tx.GetEntitlementByUserID(ctx, dto.GetEntitlementByUserIDCmd{UserID: userID})
+	if err != nil {
+		return fmt.Errorf("tx.GetEntitlementByUserID: %w", err)
+	}
+	if entitlement == nil {
+		return nil
+	}
+
+	return tx.CreateNotification(ctx, dto.CreateNotificationCmd{
+		UserID:        userID,
+		EntitlementID: entitlement.ID,
+		Type:          dto.NotificationTypePremiumExpiresSoon,
+		ScheduledFor:  expiresAt.Add(-24 * time.Hour),
+	})
+}
+
 func (s *service) getExpiresAtFromProductID(productID dto.ProductID) (*time.Time, error) {
 	var expiresAt time.Time
 	switch productID {
@@ -59,6 +80,10 @@ func (s *service) handleInitialPurchase(ctx context.Context, tx store.Store, cmd
 	if err != nil {
 		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
+
+	if err := s.scheduleExpirationNotification(ctx, tx, cmd.UserID, expiresAt); err != nil {
+		return fmt.Errorf("s.scheduleExpirationNotification: %w", err)
+	}
 	return nil
 }
 
@@ -75,11 +100,15 @@ func (s *service) handleRenewal(ctx context.Context, tx store.Store, cmd dto.Upd
 		Active:          true,
 		Source:          dto.EntitlementSourceStore,
 		Reason:          &reason,
-		ExpiresAt:       expiresAt, // TODO fix renewal status
+		ExpiresAt:       expiresAt,
 		LastEventTimeMs: cmd.EventTimeMs,
 	})
 	if err != nil {
 		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+	}
+
+	if err := s.scheduleExpirationNotification(ctx, tx, cmd.UserID, expiresAt); err != nil {
+		return fmt.Errorf("s.scheduleExpirationNotification: %w", err)
 	}
 	return nil
 }
@@ -161,13 +190,19 @@ func (s *service) handleUnCancellation(ctx context.Context, tx store.Store, cmd 
 	}
 
 	reason := dto.EntitlementReasonUnCancellation
-	err = tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	if err := tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
 		UserID:          cmd.UserID,
 		Source:          dto.EntitlementSourceStore,
 		Active:          true,
 		Reason:          &reason,
 		ExpiresAt:       expiresAt,
 		LastEventTimeMs: cmd.EventTimeMs,
-	})
+	}); err != nil {
+		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+	}
+
+	if err := s.scheduleExpirationNotification(ctx, tx, cmd.UserID, expiresAt); err != nil {
+		return fmt.Errorf("s.scheduleExpirationNotification: %w", err)
+	}
 	return nil
 }

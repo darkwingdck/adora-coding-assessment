@@ -35,6 +35,8 @@ const (
 	EntitlementSourceNone        EntitlementSource = "NONE"
 )
 
+const NotificationTypePremiumExpiresSoon = "PREMIUM_EXPIRES_SOON"
+
 type EntitlementReason string
 
 const (

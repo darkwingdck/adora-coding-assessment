@@ -18,6 +18,7 @@ import (
 	carrierpolling "github.com/darkwingdck/adora-coding-assessment/internal/services/carrier_polling"
 	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
 	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
+	notificationworker "github.com/darkwingdck/adora-coding-assessment/internal/services/notification_worker"
 	"github.com/darkwingdck/adora-coding-assessment/internal/services/users"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -41,6 +42,9 @@ func main() {
 
 	carrierWorker := carrierpolling.NewWorker(storage, mobileCarrierService)
 	go carrierWorker.Run(ctx)
+
+	notifWorker := notificationworker.NewWorker(storage)
+	go notifWorker.Run(ctx)
 
 	api := api.NewService(storage, mobileCarrierService, inAppStoreService, usersService)
 
