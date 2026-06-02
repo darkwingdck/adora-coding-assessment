@@ -19,6 +19,7 @@ func Test_UpsertEntitlement(t *testing.T) {
 
 		err := testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          userID,
+			Active:          true,
 			Source:          dto.EntitlementSourceStore,
 			Reason:          ptr(dto.EntitlementReasonInitialPurchase),
 			LastEventTimeMs: 1000,
@@ -40,6 +41,7 @@ func Test_UpsertEntitlement(t *testing.T) {
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          userID,
+			Active:          true,
 			Source:          dto.EntitlementSourceStore,
 			Reason:          ptr(dto.EntitlementReasonInitialPurchase),
 			LastEventTimeMs: 1000,
@@ -47,6 +49,7 @@ func Test_UpsertEntitlement(t *testing.T) {
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          userID,
+			Active:          true,
 			Source:          dto.EntitlementSourceCarrier,
 			Reason:          ptr(dto.EntitlementReasonCarrierActive),
 			LastEventTimeMs: 2000,
@@ -57,6 +60,28 @@ func Test_UpsertEntitlement(t *testing.T) {
 		require.NotNil(t, ent)
 		require.Equal(t, dto.EntitlementSourceCarrier, ent.Source)
 		require.Equal(t, int64(2000), ent.LastEventTimeMs)
+	})
+
+	t.Run("creates inactive entitlement when active=false", func(t *testing.T) {
+		userID := "test_upsert_inactive"
+		cleanup(t, userID)
+
+		// simulates a non-INITIAL_PURCHASE event arriving first (e.g. CANCELLATION)
+		err := testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+			UserID:          userID,
+			Active:          false,
+			Source:          dto.EntitlementSourceStore,
+			Reason:          ptr(dto.EntitlementReasonCancellation),
+			LastEventTimeMs: 1000,
+		})
+		require.NoError(t, err)
+
+		ent, err := testStore.GetEntitlementByUserID(ctx, dto.GetEntitlementByUserIDCmd{UserID: userID})
+		require.NoError(t, err)
+		require.NotNil(t, ent, "entitlement should be created even for inactive events")
+		require.False(t, ent.Active)
+		require.Equal(t, dto.EntitlementSourceStore, ent.Source)
+		require.Equal(t, dto.EntitlementReasonCancellation, *ent.Reason)
 	})
 }
 
@@ -82,6 +107,7 @@ func Test_GetEntitlementByUserID(t *testing.T) {
 		expiresAt := time.Now().Add(30 * 24 * time.Hour)
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          userID,
+			Active:          true,
 			Source:          dto.EntitlementSourceStore,
 			Reason:          ptr(dto.EntitlementReasonRenewal),
 			ExpiresAt:       &expiresAt,
@@ -107,14 +133,16 @@ func Test_GetCarrierEntitlements(t *testing.T) {
 	cleanup(t, carrierUser, storeUser)
 
 	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
-		UserID: carrierUser,
-		Source: dto.EntitlementSourceCarrier,
-		Reason: ptr(dto.EntitlementReasonCarrierActive),
+		UserID:  carrierUser,
+		Active:  true,
+		Source:  dto.EntitlementSourceCarrier,
+		Reason:  ptr(dto.EntitlementReasonCarrierActive),
 	}))
 	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
-		UserID: storeUser,
-		Source: dto.EntitlementSourceStore,
-		Reason: ptr(dto.EntitlementReasonInitialPurchase),
+		UserID:  storeUser,
+		Active:  true,
+		Source:  dto.EntitlementSourceStore,
+		Reason:  ptr(dto.EntitlementReasonInitialPurchase),
 	}))
 
 	entitlements, err := testStore.GetCarrierEntitlements(ctx)
@@ -132,37 +160,6 @@ func Test_GetCarrierEntitlements(t *testing.T) {
 	require.True(t, carrierFound, "CARRIER entitlement should be in results")
 }
 
-func Test_UpdateEntitlement(t *testing.T) {
-	requireDB(t)
-	ctx := context.Background()
-
-	userID := "test_update_ent"
-	cleanup(t, userID)
-
-	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
-		UserID: userID,
-		Source: dto.EntitlementSourceStore,
-		Reason: ptr(dto.EntitlementReasonInitialPurchase),
-	}))
-
-	err := testStore.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
-		UserID:          userID,
-		Active:          false,
-		Source:          dto.EntitlementSourceNone,
-		Reason:          ptr(dto.EntitlementReasonCancellation),
-		LastEventTimeMs: 9999,
-	})
-	require.NoError(t, err)
-
-	ent, err := testStore.GetEntitlementByUserID(ctx, dto.GetEntitlementByUserIDCmd{UserID: userID})
-	require.NoError(t, err)
-	require.NotNil(t, ent)
-	require.False(t, ent.Active)
-	require.Equal(t, dto.EntitlementSourceNone, ent.Source)
-	require.Equal(t, dto.EntitlementReasonCancellation, *ent.Reason)
-	require.Equal(t, int64(9999), ent.LastEventTimeMs)
-}
-
 func Test_RevokeMarketplaceEntitlements(t *testing.T) {
 	requireDB(t)
 	ctx := context.Background()
@@ -172,9 +169,10 @@ func Test_RevokeMarketplaceEntitlements(t *testing.T) {
 		cleanup(t, userID)
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
-			UserID: userID,
-			Source: dto.EntitlementSourceMarketplace,
-			Reason: ptr(dto.EntitlementReasonInitialPurchase),
+			UserID:  userID,
+			Active:  true,
+			Source:  dto.EntitlementSourceMarketplace,
+			Reason:  ptr(dto.EntitlementReasonInitialPurchase),
 		}))
 
 		require.NoError(t, testStore.RevokeMarketplaceEntitlements(ctx, dto.RevokeMarketplaceEntitlementsCmd{
@@ -194,9 +192,10 @@ func Test_RevokeMarketplaceEntitlements(t *testing.T) {
 		cleanup(t, userID)
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
-			UserID: userID,
-			Source: dto.EntitlementSourceStore,
-			Reason: ptr(dto.EntitlementReasonInitialPurchase),
+			UserID:  userID,
+			Active:  true,
+			Source:  dto.EntitlementSourceStore,
+			Reason:  ptr(dto.EntitlementReasonInitialPurchase),
 		}))
 
 		require.NoError(t, testStore.RevokeMarketplaceEntitlements(ctx, dto.RevokeMarketplaceEntitlementsCmd{

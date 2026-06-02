@@ -72,6 +72,7 @@ func (s *service) handleInitialPurchase(ctx context.Context, tx store.Store, cmd
 	reason := dto.EntitlementReasonInitialPurchase
 	err = tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
+		Active:          true,
 		Source:          dto.EntitlementSourceStore,
 		Reason:          &reason,
 		ExpiresAt:       expiresAt,
@@ -95,7 +96,7 @@ func (s *service) handleRenewal(ctx context.Context, tx store.Store, cmd dto.Upd
 	}
 
 	reason := dto.EntitlementReasonRenewal
-	err = tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	err = tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
 		Active:          true,
 		Source:          dto.EntitlementSourceStore,
@@ -104,7 +105,7 @@ func (s *service) handleRenewal(ctx context.Context, tx store.Store, cmd dto.Upd
 		LastEventTimeMs: cmd.EventTimeMs,
 	})
 	if err != nil {
-		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
 
 	if err := s.scheduleExpirationNotification(ctx, tx, cmd.UserID, expiresAt); err != nil {
@@ -126,7 +127,7 @@ func (s *service) handleCancellation(ctx context.Context, tx store.Store, cmd dt
 	}
 
 	reason := dto.EntitlementReasonCancellation
-	if err := tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	if err := tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
 		Active:          false,
 		Source:          dto.EntitlementSourceStore,
@@ -134,7 +135,7 @@ func (s *service) handleCancellation(ctx context.Context, tx store.Store, cmd dt
 		ExpiresAt:       expiresAt,
 		LastEventTimeMs: cmd.EventTimeMs,
 	}); err != nil {
-		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
 	return nil
 }
@@ -152,7 +153,7 @@ func (s *service) handleBillingIssue(ctx context.Context, tx store.Store, cmd dt
 	}
 
 	reason := dto.EntitlementReasonBillingIssue
-	if err := tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	if err := tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
 		Active:          false,
 		Source:          dto.EntitlementSourceStore,
@@ -160,7 +161,7 @@ func (s *service) handleBillingIssue(ctx context.Context, tx store.Store, cmd dt
 		ExpiresAt:       expiresAt,
 		LastEventTimeMs: cmd.EventTimeMs,
 	}); err != nil {
-		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
 	return nil
 }
@@ -168,7 +169,7 @@ func (s *service) handleBillingIssue(ctx context.Context, tx store.Store, cmd dt
 // EXPIRATION - set active = false, expires_at = nil
 func (s *service) handleExparation(ctx context.Context, tx store.Store, cmd dto.UpdateUserEntitlementCmd) error {
 	reason := dto.EntitlementReasonExpiration
-	err := tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	err := tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
 		Active:          false,
 		Source:          dto.EntitlementSourceStore,
@@ -177,7 +178,7 @@ func (s *service) handleExparation(ctx context.Context, tx store.Store, cmd dto.
 		LastEventTimeMs: cmd.EventTimeMs,
 	})
 	if err != nil {
-		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
 	return nil
 }
@@ -190,15 +191,15 @@ func (s *service) handleUnCancellation(ctx context.Context, tx store.Store, cmd 
 	}
 
 	reason := dto.EntitlementReasonUnCancellation
-	if err := tx.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+	if err := tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 		UserID:          cmd.UserID,
-		Source:          dto.EntitlementSourceStore,
 		Active:          true,
+		Source:          dto.EntitlementSourceStore,
 		Reason:          &reason,
 		ExpiresAt:       expiresAt,
 		LastEventTimeMs: cmd.EventTimeMs,
 	}); err != nil {
-		return fmt.Errorf("tx.UpdateEntitlement: %w", err)
+		return fmt.Errorf("tx.UpsertEntitlement: %w", err)
 	}
 
 	if err := s.scheduleExpirationNotification(ctx, tx, cmd.UserID, expiresAt); err != nil {

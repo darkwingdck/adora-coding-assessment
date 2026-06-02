@@ -19,6 +19,7 @@ func Test_CreateNotification(t *testing.T) {
 		cleanup(t, userID)
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+			Active: true,
 			UserID: userID,
 			Source: dto.EntitlementSourceStore,
 			Reason: ptr(dto.EntitlementReasonInitialPurchase),
@@ -44,6 +45,7 @@ func Test_CreateNotification(t *testing.T) {
 		cleanup(t, userID)
 
 		require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+			Active: true,
 			UserID: userID,
 			Source: dto.EntitlementSourceStore,
 			Reason: ptr(dto.EntitlementReasonInitialPurchase),
@@ -76,6 +78,7 @@ func Test_GetPendingNotifications(t *testing.T) {
 
 	// past notification — should appear as pending
 	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+		Active: true,
 		UserID: pastUser,
 		Source: dto.EntitlementSourceStore,
 		Reason: ptr(dto.EntitlementReasonInitialPurchase),
@@ -91,6 +94,7 @@ func Test_GetPendingNotifications(t *testing.T) {
 
 	// future notification — should not appear
 	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+		Active: true,
 		UserID: futureUser,
 		Source: dto.EntitlementSourceStore,
 		Reason: ptr(dto.EntitlementReasonInitialPurchase),
@@ -128,6 +132,7 @@ func Test_MarkNotificationSent(t *testing.T) {
 	cleanup(t, userID)
 
 	require.NoError(t, testStore.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+		Active: true,
 		UserID: userID,
 		Source: dto.EntitlementSourceStore,
 		Reason: ptr(dto.EntitlementReasonInitialPurchase),

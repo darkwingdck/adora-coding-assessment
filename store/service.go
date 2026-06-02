@@ -22,7 +22,6 @@ type Store interface {
 	UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error
 	GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error)
 	GetCarrierEntitlements(ctx context.Context) ([]*Entitlement, error)
-	UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error
 	RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error
 
 	// StoreEvents

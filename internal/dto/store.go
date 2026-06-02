@@ -16,6 +16,7 @@ type UpsertUserCmd struct {
 
 type UpsertEntitlementCmd struct {
 	UserID          string
+	Active          bool
 	Source          EntitlementSource
 	Reason          *EntitlementReason
 	ExpiresAt       *time.Time
@@ -25,15 +26,6 @@ type UpsertEntitlementCmd struct {
 type GetEntitlementByUserIDCmd struct {
 	UserID   string
 	WithLock bool
-}
-
-type UpdateEntitlementCmd struct {
-	UserID          string
-	Active          bool
-	Source          EntitlementSource
-	Reason          *EntitlementReason
-	ExpiresAt       *time.Time
-	LastEventTimeMs int64
 }
 
 type RevokeMarketplaceEntitlementsCmd struct {

@@ -28,7 +28,7 @@ func Test_processUser(t *testing.T) {
 
 		reason := dto.EntitlementReasonCarrierActive
 		mockStore.EXPECT().
-			UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+			UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 				UserID:          "u_1",
 				Active:          true,
 				Source:          dto.EntitlementSourceCarrier,
@@ -50,7 +50,7 @@ func Test_processUser(t *testing.T) {
 		mockCarrier.EXPECT().
 			GetMobileCarrierUserStatus(ctx, dto.GetMobileCarrierUserStatusCmd{UserID: "u_2"}).
 			Return(&dto.GetMobileCarrierUserStatusResult{Status: dto.MobileCarrierUserStatusActive}, nil)
-		// UpdateEntitlement must NOT be called
+		// UpsertEntitlement must NOT be called
 
 		NewWorker(mockStore, mockCarrier).processUser(ctx, ent)
 	})
@@ -68,7 +68,7 @@ func Test_processUser(t *testing.T) {
 
 		reason := dto.EntitlementReasonCarrierInactive
 		mockStore.EXPECT().
-			UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+			UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 				UserID:          "u_3",
 				Active:          false,
 				Source:          dto.EntitlementSourceCarrier,
@@ -90,7 +90,7 @@ func Test_processUser(t *testing.T) {
 		mockCarrier.EXPECT().
 			GetMobileCarrierUserStatus(ctx, dto.GetMobileCarrierUserStatusCmd{UserID: "u_4"}).
 			Return(&dto.GetMobileCarrierUserStatusResult{Status: dto.MobileCarrierUserStatusInactive}, nil)
-		// UpdateEntitlement must NOT be called
+		// UpsertEntitlement must NOT be called
 
 		NewWorker(mockStore, mockCarrier).processUser(ctx, ent)
 	})
@@ -105,7 +105,7 @@ func Test_processUser(t *testing.T) {
 		mockCarrier.EXPECT().
 			GetMobileCarrierUserStatus(ctx, dto.GetMobileCarrierUserStatusCmd{UserID: "u_5"}).
 			Return(&dto.GetMobileCarrierUserStatusResult{Status: dto.MobileCarrierUserStatusApiError}, nil)
-		// UpdateEntitlement must NOT be called
+		// UpsertEntitlement must NOT be called
 
 		NewWorker(mockStore, mockCarrier).processUser(ctx, ent)
 	})
@@ -120,7 +120,7 @@ func Test_processUser(t *testing.T) {
 		mockCarrier.EXPECT().
 			GetMobileCarrierUserStatus(ctx, dto.GetMobileCarrierUserStatusCmd{UserID: "u_6"}).
 			Return(nil, errors.New("service unavailable"))
-		// UpdateEntitlement must NOT be called
+		// UpsertEntitlement must NOT be called
 
 		NewWorker(mockStore, mockCarrier).processUser(ctx, ent)
 	})
@@ -174,7 +174,7 @@ func Test_poll(t *testing.T) {
 		mockCarrier.EXPECT().
 			GetMobileCarrierUserStatus(ctx, dto.GetMobileCarrierUserStatusCmd{UserID: "u_2"}).
 			Return(&dto.GetMobileCarrierUserStatusResult{Status: dto.MobileCarrierUserStatusActive}, nil)
-		// both are already active, so UpdateEntitlement must NOT be called
+		// both are already active, so UpsertEntitlement must NOT be called
 
 		NewWorker(mockStore, mockCarrier).poll(ctx)
 	})

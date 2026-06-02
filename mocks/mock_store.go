@@ -229,20 +229,6 @@ func (mr *MockStoreMockRecorder) RevokeMarketplaceEntitlements(ctx, cmd any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeMarketplaceEntitlements", reflect.TypeOf((*MockStore)(nil).RevokeMarketplaceEntitlements), ctx, cmd)
 }
 
-// UpdateEntitlement mocks base method.
-func (m *MockStore) UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateEntitlement", ctx, cmd)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateEntitlement indicates an expected call of UpdateEntitlement.
-func (mr *MockStoreMockRecorder) UpdateEntitlement(ctx, cmd any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEntitlement", reflect.TypeOf((*MockStore)(nil).UpdateEntitlement), ctx, cmd)
-}
-
 // UpsertEntitlement mocks base method.
 func (m *MockStore) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error {
 	m.ctrl.T.Helper()

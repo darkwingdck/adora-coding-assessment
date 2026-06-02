@@ -87,6 +87,7 @@ func Test_WithTransaction(t *testing.T) {
 
 		err := testStore.WithTransaction(ctx, func(tx store.Store) error {
 			return tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+				Active: true,
 				UserID: userID,
 				Source: dto.EntitlementSourceStore,
 				Reason: ptr(dto.EntitlementReasonInitialPurchase),
@@ -105,6 +106,7 @@ func Test_WithTransaction(t *testing.T) {
 
 		err := testStore.WithTransaction(ctx, func(tx store.Store) error {
 			if err := tx.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
+				Active: true,
 				UserID: userID,
 				Source: dto.EntitlementSourceStore,
 				Reason: ptr(dto.EntitlementReasonInitialPurchase),

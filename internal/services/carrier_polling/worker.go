@@ -80,7 +80,7 @@ func (w *Worker) processUser(ctx context.Context, entitlement *store.Entitlement
 			return
 		}
 		reason := dto.EntitlementReasonCarrierActive
-		err := w.store.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+		err := w.store.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          entitlement.UserID,
 			Active:          true,
 			Source:          dto.EntitlementSourceCarrier,
@@ -89,7 +89,7 @@ func (w *Worker) processUser(ctx context.Context, entitlement *store.Entitlement
 			LastEventTimeMs: entitlement.LastEventTimeMs,
 		})
 		if err != nil {
-			log.Printf("carrier polling: w.store.UpdateEntitlement for userID %s: %v", entitlement.UserID, err)
+			log.Printf("carrier polling: w.store.UpsertEntitlement for userID %s: %v", entitlement.UserID, err)
 		}
 
 	case dto.MobileCarrierUserStatusInactive:
@@ -97,7 +97,7 @@ func (w *Worker) processUser(ctx context.Context, entitlement *store.Entitlement
 			return
 		}
 		reason := dto.EntitlementReasonCarrierInactive
-		err := w.store.UpdateEntitlement(ctx, dto.UpdateEntitlementCmd{
+		err := w.store.UpsertEntitlement(ctx, dto.UpsertEntitlementCmd{
 			UserID:          entitlement.UserID,
 			Active:          false,
 			Source:          dto.EntitlementSourceCarrier,
@@ -106,7 +106,7 @@ func (w *Worker) processUser(ctx context.Context, entitlement *store.Entitlement
 			LastEventTimeMs: entitlement.LastEventTimeMs,
 		})
 		if err != nil {
-			log.Printf("carrier polling: w.store.UpdateEntitlement for userID %s: %v", entitlement.UserID, err)
+			log.Printf("carrier polling: w.store.UpsertEntitlement for userID %s: %v", entitlement.UserID, err)
 		}
 	}
 }

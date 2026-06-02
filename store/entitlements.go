@@ -14,15 +14,15 @@ func (s *store) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlement
 		INSERT INTO
 			entitlements (user_id, active, source, reason, expires_at, last_event_time_ms)
 		VALUES
-			($1, true, $2::entitlement_source, $3::entitlement_reason, $4, $5)
+			($1, $2, $3::entitlement_source, $4::entitlement_reason, $5, $6)
 		ON CONFLICT (user_id) DO UPDATE SET
-			active = true,
+			active = EXCLUDED.active,
 			source = EXCLUDED.source,
 			reason = EXCLUDED.reason,
 			expires_at = EXCLUDED.expires_at,
 			last_event_time_ms = EXCLUDED.last_event_time_ms,
 			last_changed_at = NOW()
-	`, cmd.UserID, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs)
+	`, cmd.UserID, cmd.Active, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs)
 	if err != nil {
 		return fmt.Errorf("s.pool.Exec: %w", err)
 	}
@@ -122,26 +122,6 @@ func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitleme
 
 }
 
-func (s *store) UpdateEntitlement(ctx context.Context, cmd dto.UpdateEntitlementCmd) error {
-	_, err := s.pool.Exec(ctx, `
-		UPDATE
-			entitlements
-		SET
-			active = $1,
-			source = $2::entitlement_source,
-			reason = $3::entitlement_reason,
-			expires_at = $4,
-			last_changed_at = NOW(),
-			last_event_time_ms = $5
-		WHERE
-			user_id = $6
-	`, cmd.Active, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs, cmd.UserID)
-
-	if err != nil {
-		return fmt.Errorf("s.pool.Exec: %w", err)
-	}
-	return nil
-}
 
 func (s *store) RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error {
 	_, err := s.pool.Exec(ctx, `
