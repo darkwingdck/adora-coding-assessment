@@ -19,7 +19,6 @@ import (
 	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
 	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	notificationworker "github.com/darkwingdck/adora-coding-assessment/internal/services/notification_worker"
-	"github.com/darkwingdck/adora-coding-assessment/internal/services/users"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -38,7 +37,6 @@ func main() {
 	storage := store.NewStore(pool)
 	mobileCarrierService := mobilecarrier.NewService()
 	inAppStoreService := inappstore.NewService(storage)
-	usersService := users.NewService(storage)
 
 	carrierWorker := carrierpolling.NewWorker(storage, mobileCarrierService)
 	go carrierWorker.Run(ctx)
@@ -46,7 +44,7 @@ func main() {
 	notifWorker := notificationworker.NewWorker(storage)
 	go notifWorker.Run(ctx)
 
-	api := api.NewService(storage, mobileCarrierService, inAppStoreService, usersService)
+	api := api.NewService(storage, mobileCarrierService, inAppStoreService)
 
 	mux := http.NewServeMux()
 
@@ -54,7 +52,6 @@ func main() {
 	mux.HandleFunc("POST /webhooks/store", api.StoreWebhook())
 	mux.HandleFunc("POST /webhooks/marketplace/revoke", api.MarketplaceRevoke())
 	mux.HandleFunc("GET /users/{id}/entitlement", api.GetEntitlement())
-	mux.HandleFunc("POST /dev/generate-test-users", api.GenerateTestUsers())
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 

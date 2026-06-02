@@ -25,14 +25,9 @@ CREATE TYPE entitlement_reason AS ENUM (
     'MARKETPLACE_REVOKE'
 );
 
-CREATE TABLE users (
-    id          TEXT        PRIMARY KEY,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE entitlements (
     id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id             TEXT                NOT NULL UNIQUE REFERENCES users(id),
+    user_id             TEXT                NOT NULL UNIQUE,
     active              BOOLEAN             NOT NULL DEFAULT FALSE,
     source              entitlement_source  NOT NULL DEFAULT 'NONE',
     reason              entitlement_reason,
@@ -43,7 +38,7 @@ CREATE TABLE entitlements (
 
 CREATE TABLE store_events (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         TEXT        NOT NULL REFERENCES users(id),
+    user_id         TEXT        NOT NULL,
     event_id        TEXT        NOT NULL UNIQUE,
     type            event_type  NOT NULL,
     product_id      TEXT        NOT NULL,
@@ -53,7 +48,7 @@ CREATE TABLE store_events (
 
 CREATE TABLE notifications (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         TEXT        NOT NULL REFERENCES users(id),
+    user_id         TEXT        NOT NULL,
     entitlement_id  UUID        NOT NULL REFERENCES entitlements(id),
     type            TEXT        NOT NULL,
     scheduled_for   TIMESTAMPTZ NOT NULL,
