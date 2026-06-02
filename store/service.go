@@ -18,9 +18,6 @@ type querier interface {
 type Store interface {
 	WithTransaction(ctx context.Context, fn func(Store) error) error
 
-	// Users
-	UpsertUser(ctx context.Context, cmd dto.UpsertUserCmd) error
-
 	// Entitlements
 	UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error
 	GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error)

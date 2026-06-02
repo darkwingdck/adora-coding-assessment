@@ -51,6 +51,8 @@ func (s *service) GetEntitlement() http.HandlerFunc {
 			expiresAt := entitlement.ExpiresAt.Format(time.RFC3339)
 			resp.ExpiresAt = &expiresAt
 		}
+
+		// oh, grpc's Reason.String() would be nice!
 		if entitlement.Reason != nil {
 			reason := string(*entitlement.Reason)
 			resp.Reason = &reason

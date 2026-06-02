@@ -7,11 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type User struct {
-	ID        string    `db:"id"`
-	CreatedAt time.Time `db:"created_at"`
-}
-
 type Entitlement struct {
 	ID              uuid.UUID              `db:"id"`
 	UserID          string                 `db:"user_id"`
