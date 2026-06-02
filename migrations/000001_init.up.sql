@@ -55,3 +55,9 @@ CREATE TABLE notifications (
     sent_at         TIMESTAMPTZ,
     UNIQUE (user_id, type, entitlement_id)
 );
+
+CREATE INDEX idx_entitlements_source ON entitlements (source);
+
+CREATE INDEX idx_notifications_pending ON notifications (scheduled_for) WHERE sent_at IS NULL;
+
+CREATE INDEX idx_notifications_entitlement_id ON notifications (entitlement_id);

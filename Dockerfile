@@ -7,6 +7,7 @@ RUN go mod download
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY . .
+RUN swag init -g cmd/adora-coding-assessment/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o bin/adora-coding-assessment ./cmd/adora-coding-assessment
 
 FROM alpine:latest
