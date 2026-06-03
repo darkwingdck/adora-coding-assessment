@@ -1,6 +1,11 @@
 package api
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
+)
 
 type MarketplaceRevokeRequest struct {
 	UserIDs []string `json:"userIds"`
@@ -19,6 +24,20 @@ type MarketplaceRevokeRequest struct {
 //	@Router		/webhooks/marketplace/revoke [post]
 func (s *service) MarketplaceRevoke() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var req MarketplaceRevokeRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		err := s.store.RevokeMarketplaceEntitlements(ctx, dto.RevokeMarketplaceEntitlementsCmd{
+			UserIDs: req.UserIDs,
+		})
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }

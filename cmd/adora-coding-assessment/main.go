@@ -8,28 +8,43 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/darkwingdck/adora-coding-assessment/config"
 	_ "github.com/darkwingdck/adora-coding-assessment/docs"
 	"github.com/darkwingdck/adora-coding-assessment/internal/api"
+	carrierpolling "github.com/darkwingdck/adora-coding-assessment/internal/services/carrier_polling"
+	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
+	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
+	notificationworker "github.com/darkwingdck/adora-coding-assessment/internal/services/notification_worker"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
-	database, err := config.ConnectToSqlite("data/app.db")
+	ctx := context.Background()
+
+	pool, err := config.ConnectToPostgres(ctx)
 	if err != nil {
 		log.Fatalf("failed to initialize database: %v", err)
 	}
-	defer database.Close()
+	defer pool.Close()
 
 	log.Println("database initialized")
 
-	storage := store.NewStore(database)
+	storage := store.NewStore(pool)
+	mobileCarrierService := mobilecarrier.NewService()
+	inAppStoreService := inappstore.NewService(storage)
 
-	api := api.NewService(storage)
+	carrierWorker := carrierpolling.NewWorker(storage, mobileCarrierService)
+	go carrierWorker.Run(ctx)
+
+	notifWorker := notificationworker.NewWorker(storage)
+	go notifWorker.Run(ctx)
+
+	api := api.NewService(storage, mobileCarrierService, inAppStoreService)
 
 	mux := http.NewServeMux()
 
@@ -37,7 +52,7 @@ func main() {
 	mux.HandleFunc("POST /webhooks/store", api.StoreWebhook())
 	mux.HandleFunc("POST /webhooks/marketplace/revoke", api.MarketplaceRevoke())
 	mux.HandleFunc("GET /users/{id}/entitlement", api.GetEntitlement())
-	mux.HandleFunc("GET /mock/carrier/plan", api.MockCarrier())
+	mux.HandleFunc("POST /test/seed", api.SeedTestEntitlements())
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 

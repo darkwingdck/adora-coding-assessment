@@ -1,26 +1,31 @@
 package config
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 	"os"
-	"path/filepath"
 
-	_ "modernc.org/sqlite"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ConnectToSqlite(path string) (*sql.DB, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return nil, err
-	}
+func ConnectToPostgres(ctx context.Context) (*pgxpool.Pool, error) {
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
 
-	db, err := sql.Open("sqlite", path)
+	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}
 
-	return db, nil
+	return pool, nil
 }

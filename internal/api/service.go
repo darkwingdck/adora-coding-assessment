@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	inappstore "github.com/darkwingdck/adora-coding-assessment/internal/services/in_app_store"
+	mobilecarrier "github.com/darkwingdck/adora-coding-assessment/internal/services/mobile_carrier"
 	"github.com/darkwingdck/adora-coding-assessment/store"
 )
 
@@ -13,16 +15,20 @@ type Service interface {
 	MarketplaceRevoke() http.HandlerFunc
 	// GetEntitlement get entitlement by userID
 	GetEntitlement() http.HandlerFunc
-	// MockCarrier mocks mobile carrier method to get person subscription status
-	MockCarrier() http.HandlerFunc
+	// SeedTestEntitlements creates 30 test entitlements (10 per source) for demo purposes
+	SeedTestEntitlements() http.HandlerFunc
 }
 
 type service struct {
-	store store.Store
+	store         store.Store
+	mobileCarrier mobilecarrier.Service
+	inAppStore    inappstore.Service
 }
 
-func NewService(store store.Store) Service {
+func NewService(store store.Store, mobileCarrier mobilecarrier.Service, inAppStore inappstore.Service) Service {
 	return &service{
-		store: store,
+		store:         store,
+		mobileCarrier: mobileCarrier,
+		inAppStore:    inAppStore,
 	}
 }

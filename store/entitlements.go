@@ -1,0 +1,175 @@
+package store
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/darkwingdck/adora-coding-assessment/internal/dto"
+	"github.com/jackc/pgx/v5"
+)
+
+func (s *store) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO
+			entitlements (user_id, active, source, reason, expires_at, last_event_time_ms)
+		VALUES
+			($1, $2, $3::entitlement_source, $4::entitlement_reason, $5, $6)
+		ON CONFLICT (user_id) DO UPDATE SET
+			active = EXCLUDED.active,
+			source = EXCLUDED.source,
+			reason = EXCLUDED.reason,
+			expires_at = EXCLUDED.expires_at,
+			last_event_time_ms = EXCLUDED.last_event_time_ms,
+			last_changed_at = NOW()
+	`, cmd.UserID, cmd.Active, cmd.Source, cmd.Reason, cmd.ExpiresAt, cmd.LastEventTimeMs)
+	if err != nil {
+		return fmt.Errorf("s.pool.Exec: %w", err)
+	}
+	return nil
+}
+
+func (s *store) GetCarrierEntitlements(ctx context.Context) ([]*Entitlement, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			id,
+			user_id,
+			active,
+			source,
+			reason,
+			expires_at,
+			last_changed_at,
+			last_event_time_ms
+		FROM
+			entitlements
+		WHERE
+			source = 'CARRIER'
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("s.pool.Query: %w", err)
+	}
+	defer rows.Close()
+
+	var entitlements []*Entitlement
+	for rows.Next() {
+		var e Entitlement
+		if err := rows.Scan(
+			&e.ID,
+			&e.UserID,
+			&e.Active,
+			&e.Source,
+			&e.Reason,
+			&e.ExpiresAt,
+			&e.LastChangedAt,
+			&e.LastEventTimeMs,
+		); err != nil {
+			return nil, fmt.Errorf("rows.Scan: %w", err)
+		}
+		entitlements = append(entitlements, &e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows.Err: %w", err)
+	}
+
+	return entitlements, nil
+}
+
+func (s *store) GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error) {
+	if cmd.UserID == "" {
+		return nil, fmt.Errorf("empty userID")
+	}
+
+	query := `
+		SELECT
+			id,
+			user_id,
+			active,
+			source,
+			reason,
+			expires_at,
+			last_changed_at,
+			last_event_time_ms
+		FROM
+			entitlements
+		WHERE
+			user_id = $1
+	`
+	if cmd.WithLock {
+		query += " FOR UPDATE"
+	}
+
+	var entitlement Entitlement
+
+	err := s.pool.QueryRow(ctx, query, cmd.UserID).Scan(
+		&entitlement.ID,
+		&entitlement.UserID,
+		&entitlement.Active,
+		&entitlement.Source,
+		&entitlement.Reason,
+		&entitlement.ExpiresAt,
+		&entitlement.LastChangedAt,
+		&entitlement.LastEventTimeMs,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("s.pool.QueryRow: %w", err)
+	}
+
+	return &entitlement, nil
+
+}
+
+
+func (s *store) RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE
+			entitlements
+		SET
+			active = false,
+			source = 'NONE',
+			reason = 'MARKETPLACE_REVOKE',
+			last_changed_at = NOW()
+		WHERE
+			user_id = ANY($1)
+		AND
+			source = 'MARKETPLACE'
+	`, cmd.UserIDs)
+	if err != nil {
+		return fmt.Errorf("s.pool.Exec: %w", err)
+	}
+	return nil
+}
+
+func (s *store) SeedTestEntitlements(ctx context.Context) error {
+	seeds := []struct {
+		prefix string
+		source dto.EntitlementSource
+	}{
+		{"user_store_test", dto.EntitlementSourceStore},
+		{"user_carrier_test", dto.EntitlementSourceCarrier},
+		{"user_marketplace_test", dto.EntitlementSourceMarketplace},
+	}
+
+	for _, seed := range seeds {
+		for i := 1; i <= 10; i++ {
+			userID := fmt.Sprintf("%s_%d", seed.prefix, i)
+			_, err := s.pool.Exec(ctx, `
+				INSERT INTO
+					entitlements (user_id, active, source)
+				VALUES
+					($1, true, $2::entitlement_source)
+				ON CONFLICT (user_id) DO UPDATE SET
+					active = true,
+					source = EXCLUDED.source,
+					last_changed_at = NOW()
+			`, userID, seed.source)
+			if err != nil {
+				return fmt.Errorf("seed %s: %w", userID, err)
+			}
+		}
+	}
+	return nil
+}

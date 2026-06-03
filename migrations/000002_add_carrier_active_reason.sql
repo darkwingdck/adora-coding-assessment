@@ -1,0 +1,1 @@
+ALTER TYPE entitlement_reason ADD VALUE 'CARRIER_ACTIVE';
