@@ -52,6 +52,7 @@ func main() {
 	mux.HandleFunc("POST /webhooks/store", api.StoreWebhook())
 	mux.HandleFunc("POST /webhooks/marketplace/revoke", api.MarketplaceRevoke())
 	mux.HandleFunc("GET /users/{id}/entitlement", api.GetEntitlement())
+	mux.HandleFunc("POST /test/seed", api.SeedTestEntitlements())
 
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 

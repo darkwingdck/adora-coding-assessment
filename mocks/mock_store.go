@@ -229,6 +229,20 @@ func (mr *MockStoreMockRecorder) RevokeMarketplaceEntitlements(ctx, cmd any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeMarketplaceEntitlements", reflect.TypeOf((*MockStore)(nil).RevokeMarketplaceEntitlements), ctx, cmd)
 }
 
+// SeedTestEntitlements mocks base method.
+func (m *MockStore) SeedTestEntitlements(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SeedTestEntitlements", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SeedTestEntitlements indicates an expected call of SeedTestEntitlements.
+func (mr *MockStoreMockRecorder) SeedTestEntitlements(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SeedTestEntitlements", reflect.TypeOf((*MockStore)(nil).SeedTestEntitlements), ctx)
+}
+
 // UpsertEntitlement mocks base method.
 func (m *MockStore) UpsertEntitlement(ctx context.Context, cmd dto.UpsertEntitlementCmd) error {
 	m.ctrl.T.Helper()

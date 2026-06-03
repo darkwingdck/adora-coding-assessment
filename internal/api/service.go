@@ -15,6 +15,8 @@ type Service interface {
 	MarketplaceRevoke() http.HandlerFunc
 	// GetEntitlement get entitlement by userID
 	GetEntitlement() http.HandlerFunc
+	// SeedTestEntitlements creates 30 test entitlements (10 per source) for demo purposes
+	SeedTestEntitlements() http.HandlerFunc
 }
 
 type service struct {

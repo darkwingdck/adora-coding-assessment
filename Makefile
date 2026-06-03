@@ -2,7 +2,10 @@ GOBIN := $(shell go env GOPATH)/bin
 MOCKGEN := $(GOBIN)/mockgen
 SWAG := $(GOBIN)/swag
 
-.PHONY: test mocks swag
+.PHONY: test mocks swag run
+
+run:
+	docker compose up --build
 
 test:
 	go test ./...

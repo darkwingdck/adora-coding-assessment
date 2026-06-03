@@ -142,3 +142,34 @@ func (s *store) RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.Revok
 	}
 	return nil
 }
+
+func (s *store) SeedTestEntitlements(ctx context.Context) error {
+	seeds := []struct {
+		prefix string
+		source dto.EntitlementSource
+	}{
+		{"user_store_test", dto.EntitlementSourceStore},
+		{"user_carrier_test", dto.EntitlementSourceCarrier},
+		{"user_marketplace_test", dto.EntitlementSourceMarketplace},
+	}
+
+	for _, seed := range seeds {
+		for i := 1; i <= 10; i++ {
+			userID := fmt.Sprintf("%s_%d", seed.prefix, i)
+			_, err := s.pool.Exec(ctx, `
+				INSERT INTO
+					entitlements (user_id, active, source)
+				VALUES
+					($1, true, $2::entitlement_source)
+				ON CONFLICT (user_id) DO UPDATE SET
+					active = true,
+					source = EXCLUDED.source,
+					last_changed_at = NOW()
+			`, userID, seed.source)
+			if err != nil {
+				return fmt.Errorf("seed %s: %w", userID, err)
+			}
+		}
+	}
+	return nil
+}

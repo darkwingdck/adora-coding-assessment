@@ -1,16 +1,15 @@
 # adora-coding-assessment
 
-Hello!
+こんにちは!
 
 Here you will find my solution to the coding assignment. It turned out to be quite large and interesting. Below I will describe my thoughts about it, the main architecture, and a few jokes!
 
-### Main commands
+## Main commands
 
 Run project
 
 ```bash
-cp .env.example .env
-docker compose up --build
+cp .env.example .env && make run
 ```
 
 Test project
@@ -31,11 +30,11 @@ Generate Swagger documentation
 make swag
 ```
 
-### API examples
+## API examples
 
 All endpoints can be tested through Swagger at:
 
-http://localhost:8080/swagger/index.html
+http://localhost:8080/swagger
 
 Ingest store webhook event
 
@@ -79,7 +78,33 @@ Example response:
 }
 ```
 
-### Architecture
+Seed test entitlements
+
+Creates 30 test entitlements (10 per source) so you can test the marketplace and mobile carrier functional.
+
+```bash
+curl -X POST http://localhost:8080/test/seed
+```
+
+Example response:
+
+```json
+{
+  "store":       ["user_store_test_1", "user_store_test_2", "..."],
+  "carrier":     ["user_carrier_test_1", "user_carrier_test_2", "..."],
+  "marketplace": ["user_marketplace_test_1", "user_marketplace_test_2", "..."]
+}
+```
+
+After seeding you can immediately test marketplace revoke:
+
+```bash
+curl -X POST http://localhost:8080/webhooks/marketplace/revoke \
+  -H "Content-Type: application/json" \
+  -d '{"userIds": ["user_marketplace_test_1", "user_marketplace_test_2"]}'
+```
+
+## Architecture
 
 The service is built using a three-layer architecture:
 
@@ -96,7 +121,7 @@ In addition to the HTTP server, two background workers are started in separate g
 1. `carrier_polling` runs every 5 minutes, polls `service/mobile_carrier` for all users with `source = CARRIER`, and updates their status. Multiple worker instances can run simultaneously — this is safe because each user is processed independently.
 2. `notification_worker` runs every minute and fetches due notifications using `FOR UPDATE SKIP LOCKED`. This mechanism guarantees that two worker instances cannot process the same notification twice.
 
-### Trade-offs and main decisions
+## Trade-offs and main decisions
 
 1. PostgreSQL vs SQLite. I chose PostgreSQL because of its richer feature set, locks, and enums.
 2. Users table. Out of habit, I initially added a `users` table, but quickly realized that a subscription microservice should not manage users. If a message arrives with `user_id="u_42"`, it means that user already exists in another service and another database.
@@ -105,13 +130,13 @@ In addition to the HTTP server, two background workers are started in separate g
 5. `api -> service -> store` architecture. I try to keep all business logic inside services. API handlers simply call services, and services call the store layer (which knows nothing about business logic). For the same reason, I do not use database triggers — the less the database knows about business rules, the better.
 6. Mock carrier endpoint. It is implemented simply as a method in a separate service. I could have exposed it as an actual endpoint, but decided not to. Instead, I accounted for the fact that in a real system the worker would make an HTTP request, which is why I did not wrap everything into a single transaction.
 
-### Use of AI
+## Use of AI
 
 1. Test generation. I approached this the same way I usually do: after implementing an atomic service, I write down all test cases that come to mind. Then I write two tests — a happy path and a test covering an error scenario. After that, I ask an AI assistant to generate the remaining test cases based on those examples, and then I review everything it generated.
 2. Swagger annotations.
 3. AI code completion in the editor.
 
-### What I would do differently
+## What I would do differently
 
 Almost everything!
 

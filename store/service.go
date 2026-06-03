@@ -23,6 +23,7 @@ type Store interface {
 	GetEntitlementByUserID(ctx context.Context, cmd dto.GetEntitlementByUserIDCmd) (*Entitlement, error)
 	GetCarrierEntitlements(ctx context.Context) ([]*Entitlement, error)
 	RevokeMarketplaceEntitlements(ctx context.Context, cmd dto.RevokeMarketplaceEntitlementsCmd) error
+	SeedTestEntitlements(ctx context.Context) error
 
 	// StoreEvents
 	CreateStoreEvent(ctx context.Context, cmd dto.CreateStoreEventCmd) (bool, error)
